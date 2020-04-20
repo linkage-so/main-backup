@@ -1,0 +1,18 @@
+version: '3.3'
+services:
+    rclone:
+        container_name: rclone
+        volumes:
+            - '/root/.config/rclone:/config'
+            - '/www/html/gutenberg-examples/:/source'
+        environment:
+            - SYNC_SRC=/source
+            - 'SYNC_DEST=main:/'
+            - SERVER_NAME=LINKAGE-WORDPRESS
+            - TZ=Asia/Tokyo
+            - 'CRON=0/3 * * * *'
+            - 'SERVER_SIDE_CRON=0/3 * * * *'
+            - 'CRON_ABORT=0 6 * * *'
+            - FORCE_SYNC=1
+            #- 'CHECK_URL=https://hc-ping.com/a74b1d4d-d6fb-45cb-8780-2756455ea79e'
+        image: wnwnsgh/linkage:0.1

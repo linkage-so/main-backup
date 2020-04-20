@@ -1,15 +1,20 @@
 ARG BASE=alpine:latest
 FROM ${BASE}
 
-LABEL maintainer="pfidr"
+LABEL maintainer="LINKAGE"
 
 ARG RCLONE_VERSION=current
 ARG ARCH=amd64
 ENV SYNC_SRC=
 ENV SYNC_DEST=
+ENV SERVER_NAME=
+ENV BACKUP_DEST="backup:/"
 ENV SYNC_OPTS=-v
 ENV SYNC_OPTS_EVAL=
 ENV SYNC_ONCE=
+ENV SERVER_SIDE_OPTION="--drive-server-side-across-configs"
+ENV SERVER_SIDE_CHECKER="--checkers=8"
+ENV SERVER_SIDE_TPSLIMIT="--tpslimit=8"
 ENV RCLONE_CMD=sync
 ENV RCLONE_DIR_CMD=ls
 ENV RCLONE_DIR_CHECK_SKIP=
@@ -18,12 +23,14 @@ ENV OUTPUT_LOG=
 ENV ROTATE_LOG=
 ENV CRON=
 ENV CRON_ABORT=
+ENV SERVER_SIDE_CRON=
 ENV FORCE_SYNC=
 ENV CHECK_URL=
 ENV FAIL_URL=
-ENV TZ=
+ENV TZ=Asia/Tokyo
 ENV UID=
 ENV GID=
+
 
 RUN apk --no-cache add ca-certificates fuse wget dcron tzdata
 
@@ -38,6 +45,7 @@ RUN URL=http://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-l
 COPY entrypoint.sh /
 COPY sync.sh /
 COPY sync-abort.sh /
+COPY sync-serverside.sh /
 
 VOLUME ["/config"]
 VOLUME ["/logs"]

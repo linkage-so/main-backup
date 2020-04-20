@@ -2,7 +2,9 @@
 
 set -e
 
-echo "INFO: Starting sync.sh pid $$ $(date)"
+RCLONE_CMD=copy
+
+echo "INFO: Starting sync-serverside.sh pid $$ $(date)"
 
 # Delete logs by user request
 if [ ! -z "${ROTATE_LOG##*[!0-9]*}" ]
@@ -16,7 +18,7 @@ then
   echo "WARNING: A previous $RCLONE_CMD is still running. Skipping new $RCLONE_CMD command."
 else
 
-  echo $$ > /tmp/sync.pid
+  echo $$ > /tmp/sync-serverside.pid
 
   if [ ! -z "$SYNC_OPTS_EVAL" ]
   then
@@ -40,8 +42,8 @@ else
         echo "INFO: Sending start signal to healthchecks.io"
         wget $CHECK_URL/start -O /dev/null
       fi
-      echo "INFO: Starting rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL --log-file=${LOG_FILE}"
-      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL --log-file=${LOG_FILE}
+      echo "INFO: Starting rclone $RCLONE_CMD $SYNC_DEST$SERVER_NAME $BACKUP_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $SERVER_SIDE_OPTION $SERVER_SIDE_CHECKER $SERVER_SIDE_TPSLIMIT --log-file=${LOG_FILE}"
+      rclone $RCLONE_CMD $SYNC_DEST$SERVER_NAME $BACKUP_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $SERVER_SIDE_OPTION $SERVER_SIDE_CHECKER $SERVER_SIDE_TPSLIMIT --log-file=${LOG_FILE} 
       export RETURN_CODE=$?
     else
       if [ ! -z "$CHECK_URL" ]
@@ -49,8 +51,8 @@ else
         echo "INFO: Sending start signal to healthchecks.io"
         wget $CHECK_URL/start -O /dev/null
       fi
-      echo "INFO: Starting rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL"
-      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL
+      echo "INFO: Starting rclone $RCLONE_CMD $SYNC_DEST$SERVER_NAME $BACKUP_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $SERVER_SIDE_OPTION $SERVER_SIDE_CHECKER $SERVER_SIDE_TPSLIMIT"
+      rclone $RCLONE_CMD $SYNC_DEST$SERVER_NAME $BACKUP_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $SERVER_SIDE_OPTION $SERVER_SIDE_CHECKER $SERVER_SIDE_TPSLIMIT
       export RETURN_CODE=$?
     fi
   else
@@ -66,17 +68,17 @@ else
         echo "INFO: Sending start signal to healthchecks.io"
         wget $CHECK_URL/start -O /dev/null
       fi
-      echo "INFO: Starting rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL --log-file=${LOG_FILE}"
-      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL --log-file=${LOG_FILE}
+      echo "INFO: Starting rclone $RCLONE_CMD $SYNC_DEST$SERVER_NAME $BACKUP_DEST$SERVER_NAME $SYNC_OPTS_ALL $SERVER_SIDE_OPTION $SERVER_SIDE_CHECKER $SERVER_SIDE_TPSLIMIT --log-file=${LOG_FILE}"
+      rclone $RCLONE_CMD $SYNC_DEST$SERVER_NAME $BACKUP_DEST$SERVER_NAME $SYNC_OPTS_ALL $SERVER_SIDE_OPTION $SERVER_SIDE_CHECKER $SERVER_SIDE_TPSLIMIT --log-file=${LOG_FILE} 
       export RETURN_CODE=$?
     else
-      echo "INFO: Starting rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL"
+      echo "INFO: Starting rclone $RCLONE_CMD $SYNC_DEST$SERVER_NAME $BACKUP_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $SERVER_SIDE_OPTION $SERVER_SIDE_CHECKER $SERVER_SIDE_TPSLIMIT"
       if [ ! -z "$CHECK_URL" ]
       then
         echo "INFO: Sending start signal to healthchecks.io"
         wget $CHECK_URL/start -O /dev/null
       fi
-      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL
+      rclone $RCLONE_CMD $SYNC_DEST$SERVER_NAME $BACKUP_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $SERVER_SIDE_OPTION $SERVER_SIDE_CHECKER $SERVER_SIDE_TPSLIMIT
       export RETURN_CODE=$?
     fi
       if [ -z "$CHECK_URL" ]
@@ -97,6 +99,6 @@ else
     fi
   fi
 
-rm -f /tmp/sync.pid
+rm -f /tmp/sync-serverside.pid
 
 fi

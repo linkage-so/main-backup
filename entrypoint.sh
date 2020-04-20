@@ -68,6 +68,19 @@ case "$(echo "$CRON" | tr '[:lower:]' '[:upper:]')" in
     * ) CRONS=$CRON;;
 esac
 
+# Re-write Server Side cron shortcut
+case "$(echo "$SERVER_SIDE_CRON" | tr '[:lower:]' '[:upper:]')" in
+    *@YEARLY* ) echo "INFO: Cron shortcut $CRON re-written to 0 0 1 1 *" && CRONS="0 0 1 1 *";;
+    *@ANNUALLY* ) echo "INFO: Cron shortcut $CRON re-written to 0 0 1 1 *" && CRONS="0 0 1 1 *";;
+    *@MONTHLY* ) echo "INFO: Cron shortcut $CRON re-written to 0 0 1 * *" && CRONS="0 0 1 * * ";;
+    *@WEEKLY* ) echo "INFO: Cron shortcut $CRON re-written to 0 0 * * 0" && CRONS="0 0 * * 0";;
+    *@DAILY* ) echo "INFO: Cron shortcut $CRON re-written to 0 0 * * *" && CRONS="0 0 * * *";;
+    *@MIDNIGHT* ) echo "INFO: Cron shortcut $CRON re-written to 0 0 * * *" && CRONS="0 0 * * *";;
+    *@HOURLY* ) echo "INFO: Cron shortcut $CRON re-written to 0 * * * *" && CRONS="0 * * * *";;
+    *@* ) echo "WARNING: Cron shortcut $CRON is not supported. Stopping." && exit 1;;
+    * ) SERVER_SIDE_CRONS=$SERVER_SIDE_CRON;;
+esac
+
 # Set time zone if passed in
 if [ ! -z "$TZ" ]
 then
@@ -98,12 +111,14 @@ else
     echo "INFO: No CRON setting found. Running sync once."
     echo "INFO: Add CRON=\"0 0 * * *\" to perform sync every midnight"
     su "$USER" -c /sync.sh
+	su "$USER" -c /sync-serverside.sh
   else
     if [ -z "$FORCE_SYNC" ]
     then
       echo "INFO: Add FORCE_SYNC=1 to perform a sync upon boot"
     else
       su "$USER" -c /sync.sh
+	  su "$USER" -c /sync-serverside.sh
     fi
 
     if [ ! -z "$SYNC_ONCE" ]
@@ -114,12 +129,18 @@ else
 
     # Setup cron schedule
     crontab -d
-    echo "$CRONS su $USER -c /sync.sh >>/tmp/sync.log 2>&1" > /tmp/crontab.tmp
+    echo "$CRONS su $USER -c /sync.sh >>/tmp/sync.log 2>&1" >> /tmp/crontab.tmp
     if [ -z "$CRON_ABORT" ]
     then
       echo "INFO: Add CRON_ABORT=\"0 6 * * *\" to cancel outstanding sync at 6am"
     else
       echo "$CRON_ABORT /sync-abort.sh >>/tmp/sync.log 2>&1" >> /tmp/crontab.tmp
+    fi
+	if [ -z "$SERVER_SIDE_CRONS" ]
+    then
+      echo "INFO: Add SERVER_SIDE_CRONS=\"0 6 * * *\" to cancel outstanding sync at 6am"
+    else
+      echo "$SERVER_SIDE_CRONS su $USER -c /sync-serverside.sh >>/tmp/sync-serverside.log 2>&1" >> /tmp/crontab.tmp
     fi
     crontab /tmp/crontab.tmp
     rm /tmp/crontab.tmp
@@ -127,9 +148,11 @@ else
     # Start cron
     echo "INFO: Starting crond ..."
     touch /tmp/sync.log
+	touch /tmp/sync-serverside.log
     touch /tmp/crond.log
+	
     crond -b -l 0 -L /tmp/crond.log
     echo "INFO: crond started"
-    tail -F /tmp/crond.log /tmp/sync.log
+    tail -F /tmp/crond.log /tmp/sync.log /tmp/sync-serverside.log
   fi
 fi
