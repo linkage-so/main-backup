@@ -1,5 +1,10 @@
 #!/bin/sh
 
+#STATIC_VAR
+TIMESTAMP="$(date +%F_%T)"
+YEARS="$(date +%Y)"
+ARCHIVE_DIR="--backup-dir "$SYNC_DEST$SERVER_NAME"_ARCHIVES/"$YEARS/$TIMESTAMP/
+
 set -e
 
 echo "INFO: Starting sync.sh pid $$ $(date)"
@@ -41,8 +46,9 @@ else
         wget $CHECK_URL/start -O /dev/null
       fi
       echo "INFO: Starting rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL --log-file=${LOG_FILE}"
-      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL --log-file=${LOG_FILE}
+      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $ARCHIVE_DIR --log-file=${LOG_FILE}
       export RETURN_CODE=$?
+	  
     else
       if [ ! -z "$CHECK_URL" ]
       then
@@ -50,7 +56,7 @@ else
         wget $CHECK_URL/start -O /dev/null
       fi
       echo "INFO: Starting rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL"
-      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL
+      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $ARCHIVE_DIR 
       export RETURN_CODE=$?
     fi
   else
@@ -67,7 +73,7 @@ else
         wget $CHECK_URL/start -O /dev/null
       fi
       echo "INFO: Starting rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL --log-file=${LOG_FILE}"
-      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL --log-file=${LOG_FILE}
+      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $ARCHIVE_DIR --log-file=${LOG_FILE}
       export RETURN_CODE=$?
     else
       echo "INFO: Starting rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL"
@@ -76,7 +82,7 @@ else
         echo "INFO: Sending start signal to healthchecks.io"
         wget $CHECK_URL/start -O /dev/null
       fi
-      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL
+      rclone $RCLONE_CMD $SYNC_SRC $SYNC_DEST$SERVER_NAME $RCLONE_OPTS $SYNC_OPTS_ALL $ARCHIVE_DIR 
       export RETURN_CODE=$?
     fi
       if [ -z "$CHECK_URL" ]

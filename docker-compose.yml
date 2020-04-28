@@ -1,18 +1,101 @@
-version: '3.3'
+# SYNCの場合、下の命令語でバックアップします。
+# rclone sync /source main:/LINKAGE-PHP5 --config /config/rclone.conf -v
+
+# メインドライブからバックアップドライブにバックアップする場合、下の命令語でバックアップします。
+# rclone copy main:/LINKAGE-PHP5 backup:/LINKAGE-PHP5 --config /config/rclone.conf -v --drive-server-side-across-configs --checkers=8 --tpslimit=１
+
+# 全作業はHASHチェックをしてSyncとCopyします。
+
+
+version: '3.3' # docker-compose.yml version
 services:
-    rclone:
-        container_name: rclone
+    rclone-1: # dockerのサービス名、 これをコピしてサービス名を変更して使えます。
+        container_name: RCLONE-PHP5 # dockerで確認できるコンテナ名
+        volumes:
+            - '/root/.config/rclone:/config'
+            # RCLONE CONFファイルのPATH、この中に rclone.confがあります。
+            - '/www/html/gutenberg-examples/:/source'
+            # バックアップしたいフォルダのPATH、ここを変更したら変更したPATHのファイルがバックアップされます。
+            # 例）'/www/html/PHP5/TEST-LINKAGE-JP:/source'
+        environment:
+            - RCLONE_CMD=sync
+            # ローカルからメインドライブにバックアップする方法
+            # SYNC ｜ MOVE　｜ COPY があります。
+            - TZ=Asia/Tokyo 
+            # TIMEZONE基本設定もTokyoです。 ローグで表示される時間です。
+            - SERVER_NAME=LINKAGE-PHP5
+            # GDriveで保存する時のフォルダ名です。
+            # 例）TEST_SERVER
+            - SYNC_OPTS=-v
+            # -v なら INFO、-vv なら DEBUG MODEになります。
+            - FORCE_SYNC=1
+            # 値が ”1” なら Docker起動した後にバックアップします。
+            - SYNC_SRC=/source
+            # 上でマウントしたファイルです。
+            - 'SYNC_DEST=main:/'
+            # メインドライブ、RCLONE CONF FILEに設定されている情報 （メイン）
+            - 'BACKUP_DEST=backup:/'
+            # バックアップドライブ、RCLONE CONF FILEに設定されている情報 （バックアップ）
+            - 'CRON=*/3 * * * *'
+            # メインドライブにバックアップする時間情報、基準はCrontabです。
+            # @yearly @monthly @weekly @daily @hourly も使えます。
+            # 上の場合は 3分に一回バックアップです。
+            - 'SERVER_SIDE_CRON=*/3 * * * *'
+            # メインドライブからバックアップドライブにバックアップする時間情報、基準はCrontabです。
+            # @yearly @monthly @weekly @daily @hourly も使えます。
+            # 上の場合は 3分に一回バックアップです。
+            - 'CRON_ABORT=0 6 * * *'
+            # バックアップしてプロセスをKillする時間
+            # 上の場合は毎日朝6時に SYNCをKILLします。
+        image: wnwnsgh/linkage:latest
+        # Dockerのイメージ
+        
+# ######################################################################################
+# 一つではなく他のフォルダもバックアップしたい場合、下みたいにコピして利用できます。
+# ######################################################################################
+
+    rclone-2: # dockerのサービス名、 変更が必要です。 上のコンテナ名と同じ場合はエラー発生します。
+        container_name: RCLONE-PHP5-1 # コンテナ名変更が必要です。 上のコンテナ名と同じ場合はエラー発生します。
         volumes:
             - '/root/.config/rclone:/config'
             - '/www/html/gutenberg-examples/:/source'
         environment:
-            - SYNC_SRC=/source
-            - 'SYNC_DEST=main:/'
-            - SERVER_NAME=LINKAGE-WORDPRESS
-            - TZ=Asia/Tokyo
-            - 'CRON=0/3 * * * *'
-            - 'SERVER_SIDE_CRON=0/3 * * * *'
-            - 'CRON_ABORT=0 6 * * *'
-            - FORCE_SYNC=1
-            #- 'CHECK_URL=https://hc-ping.com/a74b1d4d-d6fb-45cb-8780-2756455ea79e'
-        image: wnwnsgh/linkage:0.1
+            - RCLONE_CMD=sync
+            - TZ=Asia/Tokyo 
+            - SERVER_NAME=LINKAGE-PHP5-1  
+            - SYNC_OPTS=-v            
+            - FORCE_SYNC=1            
+            - SYNC_SRC=/source            
+            - 'SYNC_DEST=main:/'           
+            - 'BACKUP_DEST=backup:/'          
+            - 'CRON=*/3 * * * *'              
+            - 'SERVER_SIDE_CRON=*/3 * * * *'           
+            - 'CRON_ABORT=0 6 * * *'        
+        image: wnwnsgh/linkage:latest
+        
+    rclone-3: # dockerのサービス名、 変更が必要です。 上のコンテナ名と同じ場合はエラー発生します。
+        container_name: RCLONE-PHP5-2 # コンテナ名変更が必要です。 上のコンテナ名と同じ場合はエラー発生します。
+        volumes:
+            - '/root/.config/rclone:/config'
+            - '/www/html/gutenberg-examples/:/source'
+        environment:
+            - RCLONE_CMD=sync
+            - TZ=Asia/Tokyo 
+            - SERVER_NAME=LINKAGE-PHP5-2 
+            - SYNC_OPTS=-v            
+            - FORCE_SYNC=1            
+            - SYNC_SRC=/source            
+            - 'SYNC_DEST=main:/'           
+            - 'BACKUP_DEST=backup:/'          
+            - 'CRON=*/3 * * * *'              
+            - 'SERVER_SIDE_CRON=*/3 * * * *'           
+            - 'CRON_ABORT=0 6 * * *'        
+        image: wnwnsgh/linkage:latest
+        
+
+
+
+
+
+
+

@@ -8,13 +8,9 @@ ARG ARCH=amd64
 ENV SYNC_SRC=
 ENV SYNC_DEST=
 ENV SERVER_NAME=
-ENV BACKUP_DEST="backup:/"
 ENV SYNC_OPTS=-v
 ENV SYNC_OPTS_EVAL=
 ENV SYNC_ONCE=
-ENV SERVER_SIDE_OPTION="--drive-server-side-across-configs"
-ENV SERVER_SIDE_CHECKER="--checkers=8"
-ENV SERVER_SIDE_TPSLIMIT="--tpslimit=8"
 ENV RCLONE_CMD=sync
 ENV RCLONE_DIR_CMD=ls
 ENV RCLONE_DIR_CHECK_SKIP=
@@ -45,7 +41,6 @@ RUN URL=http://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-l
 COPY entrypoint.sh /
 COPY sync.sh /
 COPY sync-abort.sh /
-COPY sync-serverside.sh /
 
 VOLUME ["/config"]
 VOLUME ["/logs"]
